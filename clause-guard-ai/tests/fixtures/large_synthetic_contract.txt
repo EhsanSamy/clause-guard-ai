@@ -1,0 +1,277 @@
+MASTER SOFTWARE SERVICES AND TECHNOLOGY AGREEMENT
+
+Effective Date: January 1, 2026
+
+This Master Software Services and Technology Agreement ("Agreement") is
+entered into between Alpha Technologies Ltd. ("Company") and Beta Solutions
+Inc. ("Provider"). The parties agree to the following terms and conditions.
+
+1. SERVICES
+
+Provider shall provide software development, maintenance, technical support,
+data processing, cloud infrastructure management, and related technology
+services requested by Company from time to time. Provider shall perform the
+services in a professional and commercially reasonable manner and shall use
+qualified personnel to perform its obligations under this Agreement.
+
+Provider shall maintain appropriate technical and organizational measures to
+protect Company systems and information and shall notify Company without
+undue delay of any material security incident affecting the services.
+
+2. PAYMENT TERMS
+
+Company shall pay Provider the fees specified in each applicable Statement of
+Work. Unless otherwise stated in a Statement of Work, invoices shall be
+submitted monthly and shall be payable within thirty (30) days after receipt.
+
+If Company disputes an invoice in good faith, Company shall notify Provider
+within ten (10) business days after receipt of the invoice and shall identify
+the disputed amount and the reason for the dispute. The undisputed portion
+shall remain payable according to the original payment schedule.
+
+Provider may charge interest on undisputed overdue amounts at the lesser of
+one percent (1%) per month or the maximum rate permitted by applicable law.
+Provider shall not suspend critical services solely because of a disputed
+invoice while the dispute is being resolved in good faith.
+
+3. CONFIDENTIALITY
+
+Each party may receive confidential business, technical, financial, security,
+customer, product, or other proprietary information belonging to the other
+party. The receiving party shall use such confidential information solely for
+the purpose of performing or receiving services under this Agreement.
+
+The receiving party shall not disclose confidential information to any third
+party except to its employees, contractors, professional advisers, or
+subprocessors who have a legitimate need to know such information and who
+are bound by confidentiality obligations no less protective than those in
+this Agreement.
+
+The confidentiality obligations in this section shall not apply to information
+that the receiving party can demonstrate was publicly available without
+breach of this Agreement, was already lawfully known to the receiving party,
+was independently developed without use of confidential information, or was
+lawfully received from a third party without confidentiality restrictions.
+
+Upon termination of this Agreement, each party shall, upon written request,
+return or securely destroy the other party's confidential information, except
+for copies required to be retained by law or maintained automatically in
+ordinary-course backup systems.
+
+4. INTELLECTUAL PROPERTY AND IP ASSIGNMENT
+
+All intellectual property rights in software, documentation, designs,
+reports, specifications, and other deliverables specifically created by
+Provider for Company under a Statement of Work shall be owned by Company
+upon payment of the applicable fees, except for Provider's pre-existing
+materials, tools, libraries, frameworks, and general know-how.
+
+To the extent any intellectual property rights in a deliverable do not
+automatically vest in Company, Provider hereby assigns to Company all right,
+title, and interest in such intellectual property rights, including applicable
+copyrights, patent rights, and other proprietary rights.
+
+Provider retains ownership of its pre-existing technology and development
+tools. Provider grants Company a perpetual, worldwide, non-exclusive,
+royalty-free license to use any Provider pre-existing materials incorporated
+into a deliverable to the extent necessary for Company to use, maintain, and
+modify that deliverable.
+
+5. LIMITATION OF LIABILITY
+
+Except for liability arising from a party's fraud, willful misconduct,
+violation of confidentiality obligations, infringement or misappropriation of
+intellectual property rights, or indemnification obligations under this
+Agreement, neither party shall be liable to the other party for any indirect,
+incidental, special, consequential, exemplary, or punitive damages, including
+loss of profits, revenues, business opportunities, or anticipated savings,
+whether arising in contract, tort, or otherwise.
+
+Subject to the exclusions stated above, each party's aggregate liability
+arising out of or relating to this Agreement shall not exceed the total fees
+paid or payable by Company to Provider under the applicable Statement of Work
+during the twelve (12) months preceding the event giving rise to the claim.
+
+The limitations in this section shall apply to the maximum extent permitted
+by applicable law.
+
+6. INDEMNIFICATION
+
+Provider shall defend, indemnify, and hold harmless Company, its affiliates,
+and their respective officers, directors, employees, and agents from and
+against any third-party claims, damages, losses, liabilities, costs, and
+reasonable attorneys' fees arising from or relating to any allegation that
+the services or deliverables provided by Provider infringe or
+misappropriate a third party's intellectual property rights.
+
+Provider shall also indemnify Company against third-party claims arising from
+Provider's gross negligence, willful misconduct, or violation of applicable
+data protection or information security laws in connection with the services.
+
+Company shall promptly notify Provider of any indemnified claim and shall
+provide reasonable cooperation in the defense of such claim. Provider shall
+not settle any claim in a manner that admits fault by Company or imposes
+non-monetary obligations on Company without Company's prior written consent.
+
+7. TERMINATION
+
+Either party may terminate this Agreement for material breach by the other
+party if the breach remains uncured for thirty (30) days after written
+notice describing the breach in reasonable detail.
+
+Company may terminate a Statement of Work for convenience upon thirty (30)
+days' prior written notice to Provider. In such event, Company shall pay
+Provider for accepted services properly performed through the effective
+date
+of termination and any approved, non-cancellable expenses incurred before
+receipt of the termination notice.
+
+Either party may terminate this Agreement immediately upon written notice if
+the other party becomes insolvent, enters liquidation, makes an assignment
+for the benefit of creditors, or becomes subject to a proceeding that is not
+dismissed within the period permitted by applicable law.
+
+Upon termination, each party shall return the other party's property and
+confidential information as required by this Agreement. Termination shall
+not affect rights or obligations that accrued before the effective
+termination date.
+
+8. AUTO-RENEWAL
+
+This Agreement shall commence on the Effective Date and remain in effect for
+an initial term of twelve (12) months.
+
+After the initial term, this Agreement shall automatically renew for
+successive twelve (12) month renewal periods unless either party provides
+written notice of non-renewal at least sixty (60) days before the end of the
+then-current term.
+
+If either party provides timely notice of non-renewal, the Agreement shall
+expire at the end of the applicable term and shall not automatically renew
+for another period.
+
+Any renewal period shall remain subject to the terms and conditions of this
+Agreement unless the parties expressly agree otherwise in writing.
+
+9. GOVERNING LAW
+
+This Agreement and any dispute, claim, or controversy arising out of or
+relating to this Agreement shall be governed by and construed in accordance
+with the laws of the State of New York, without regard to its conflict of
+laws principles.
+
+The parties agree that the courts located in New York County, New York shall
+have exclusive jurisdiction over any dispute arising out of or relating to
+this Agreement, except where applicable law requires a different forum.
+
+Each party irrevocably submits to the jurisdiction of such courts and waives
+any objection based on inconvenient forum to the extent permitted by law.
+
+10. DATA SECURITY
+
+Provider shall maintain reasonable administrative, technical, and physical
+safeguards designed to protect Company data against unauthorized access,
+loss, destruction, alteration, or disclosure.
+
+Provider shall restrict access to Company data to personnel who require such
+access to perform their responsibilities under this Agreement. Provider
+shall maintain appropriate access controls and shall review privileged
+access periodically.
+
+Provider shall notify Company promptly after becoming aware of a confirmed
+security incident that materially affects Company data and shall reasonably
+cooperate with Company in investigating and mitigating the incident.
+
+11. AUDIT RIGHTS
+
+Upon reasonable prior written notice and no more than once annually, Company
+may audit Provider's compliance with the security and confidentiality
+requirements of this Agreement.
+
+Any audit shall be conducted during normal business hours and in a manner
+designed to minimize unreasonable disruption to Provider's operations.
+
+Provider shall reasonably cooperate with such audits and shall provide
+relevant documentation reasonably necessary to demonstrate compliance,
+subject to appropriate confidentiality protections.
+
+12. INSURANCE
+
+Provider shall maintain commercially reasonable insurance coverage
+appropriate for the nature and scope of the services provided under this
+Agreement.
+
+Upon reasonable request, Provider shall provide certificates of insurance
+confirming the existence of the required coverage.
+
+13. FORCE MAJEURE
+
+Neither party shall be responsible for delay or failure to perform an
+obligation under this Agreement to the extent caused by events beyond its
+reasonable control, including natural disasters, widespread
+telecommunications failures, governmental actions, war, civil disturbance,
+or other similar events.
+
+The affected party shall promptly notify the other party of the event and
+shall use commercially reasonable efforts to mitigate its effects and resume
+performance.
+
+14. NOTICES
+
+Any notice required under this Agreement shall be provided in writing by
+email, recognized courier, or registered mail to the contact information
+designated by the receiving party.
+
+A notice shall be deemed received when delivery is confirmed by the relevant
+communication method, subject to any mandatory requirements of applicable
+law.
+
+15. ASSIGNMENT
+
+Neither party may assign this Agreement or transfer its rights or
+obligations without the prior written consent of the other party, except
+that either party may assign this Agreement to an affiliate or in connection
+with a merger, reorganization, or sale of substantially all of its assets,
+provided that the assignee assumes the assigning party's obligations.
+
+16. ENTIRE AGREEMENT
+
+This Agreement, together with all applicable Statements of Work and written
+amendments signed by both parties, constitutes the entire agreement between
+the parties concerning its subject matter and supersedes all prior
+discussions, proposals, and agreements relating to that subject matter.
+
+17. SEVERABILITY
+
+If any provision of this Agreement is determined to be invalid or
+unenforceable, the remaining provisions shall remain in full force and
+effect, and the invalid or unenforceable provision shall be modified to the
+minimum extent necessary to make it enforceable while preserving its
+original intent as closely as possible.
+
+18. NO WAIVER
+
+A failure or delay by either party to exercise any right or remedy under
+this Agreement shall not constitute a waiver of that right or remedy.
+A waiver shall be effective only if made in writing by an authorized
+representative of the waiving party.
+
+19. COUNTERPARTS AND ELECTRONIC SIGNATURES
+
+This Agreement may be executed in counterparts, each of which shall be
+considered an original and all of which together shall constitute one
+instrument.
+
+Electronic signatures shall have the same legal effect as original
+signatures to the extent permitted by applicable law.
+
+20. GENERAL COMPLIANCE
+
+Each party shall comply with all applicable laws and regulations relating to
+its performance under this Agreement.
+
+Each party shall maintain records reasonably necessary to demonstrate such
+compliance and shall cooperate in good faith with reasonable requests from
+the other party concerning compliance matters.
+
+END OF AGREEMENT

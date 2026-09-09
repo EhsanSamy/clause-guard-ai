@@ -1,0 +1,64 @@
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# -- Tests folder contents --
+tests/**/*.py
+
+# --- Test / coverage ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# --- LlamaIndex / vector index artifacts ---
+retrieval/storage/
+retrieval/index_cache/
+*.faiss
+*.index
+
+# --- LangGraph / run artifacts ---
+.langgraph_api/
+checkpoints/
+*.sqlite
+*.sqlite3
+
+# --- Logs & local run output ---
+*.log
+logs/
+tmp/
+.cache/
+
+# --- Uploaded / processed contracts ---
+data/uploads/
+data/processed/
+*.pdf
+*.docx
+!docs/**/*.pdf
+!docs/**/*.docx
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
