@@ -84,7 +84,7 @@ def extract_clauses_node(state: GraphState) -> GraphState:
                 f"{case.document_text}"
             ),
             model=MODEL.extraction_model,
-            max_tokens=MODEL.max_tokens,
+            max_tokens=8000,
             temperature=MODEL.temperature,
         )
 
@@ -151,5 +151,8 @@ def extract_clauses_node(state: GraphState) -> GraphState:
         return {
             "tool_errors": [
                 f"extract_clauses: {e}"
-            ]
+            ],
+            "failed_steps": [
+                "extract_clauses"
+            ],
         }

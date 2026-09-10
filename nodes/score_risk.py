@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import re
+import time
 from pathlib import Path
 from typing import Callable, List, Optional
 
@@ -13,18 +14,22 @@ from schemas.clause_schema import Clause, RiskScore
 
 logger = logging.getLogger(__name__)
 
-PROMPT_FILE = Path(__file__).resolve().parent.parent / "prompts" / "score_prompt.md"
+PROMPT_FILE = (
+    Path(__file__).resolve().parent.parent
+    / "prompts"
+    / "score_prompt.md"
+)
 
 CallModelFn = Callable[[str, str], str]
 
 
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
 # Prompt loading
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
+
 def _extract_fenced_block(markdown: str, heading: str) -> str:
-    """Extract the content of the first fenced code block that appears
-    after the given '## <heading>' line.
-    """
+    """Extract the first fenced code block under a markdown heading."""
+
     heading_pattern = re.compile(
         rf"^##\s+{re.escape(heading)}\s*$",
         re.MULTILINE,
@@ -34,7 +39,8 @@ def _extract_fenced_block(markdown: str, heading: str) -> str:
 
     if not heading_match:
         raise ValueError(
-            f"prompts/score_prompt.md: heading '## {heading}' not found"
+            f"prompts/score_prompt.md: heading "
+            f"'## {heading}' not found"
         )
 
     rest = markdown[heading_match.end():]
@@ -54,7 +60,11 @@ def _extract_fenced_block(markdown: str, heading: str) -> str:
     return fence_match.group(1)
 
 
-def load_prompt_templates(path: Path = PROMPT_FILE) -> tuple[str, str]:
+def load_prompt_templates(
+    path: Path = PROMPT_FILE,
+) -> tuple[str, str]:
+    """Load the scoring system prompt and user prompt template."""
+
     markdown = path.read_text(encoding="utf-8")
 
     system_prompt = _extract_fenced_block(
@@ -73,10 +83,13 @@ def load_prompt_templates(path: Path = PROMPT_FILE) -> tuple[str, str]:
 SYSTEM_PROMPT, USER_PROMPT_TEMPLATE = load_prompt_templates()
 
 
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
 # Building the per-clause prompt
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
+
 def build_retrieved_rule_section(clause: Clause) -> str:
+    """Build the playbook section included in the scoring prompt."""
+
     if clause.retrieved_rule_found and clause.retrieved_rule:
         return (
             "Retrieved playbook rule for this category:\n"
@@ -93,6 +106,8 @@ def build_retrieved_rule_section(clause: Clause) -> str:
 
 
 def build_user_prompt(clause: Clause) -> str:
+    """Build the scoring prompt for one clause."""
+
     return USER_PROMPT_TEMPLATE.format(
         clause_tag=clause.clause_tag.value,
         clause_text=clause.clause_text,
@@ -100,29 +115,60 @@ def build_user_prompt(clause: Clause) -> str:
     )
 
 
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
 # Model call — Gemini
-# --------------------------------------------------------------------------- #
-class ScoringToolError(RuntimeError):
-    """Raised on a genuine model-call failure.
+# ---------------------------------------------------------------------------
 
-    Examples:
-    - missing API key
-    - authentication failure
-    - network failure
-    - rate limit
-    - Gemini API error
+class ScoringToolError(RuntimeError):
+    """Raised when the scoring model cannot be called successfully."""
+
+
+def _is_retryable_gemini_error(exc: Exception) -> bool:
+    """
+    Return True for temporary Gemini/API failures that may succeed
+    if retried after a short delay.
+
+    Retryable:
+        429 - rate limit / quota pressure
+        500 - internal server error
+        502 - bad gateway
+        503 - service unavailable
+        504 - gateway timeout
+
+    Non-retryable errors such as authentication or invalid requests
+    are not retried.
     """
 
+    message = str(exc).lower()
 
-def _call_gemini(system_prompt: str, user_prompt: str) -> str:
+    retryable_codes = (
+        "429",
+        "500",
+        "502",
+        "503",
+        "504",
+    )
+
+    return any(code in message for code in retryable_codes)
+
+
+def _call_gemini(
+    system_prompt: str,
+    user_prompt: str,
+) -> str:
+    """
+    Call Gemini for one clause.
+
+    Temporary API errors are retried with exponential backoff.
+    Permanent failures are raised immediately.
+    """
 
     api_key = os.getenv("GEMINI_API_KEY")
 
     if not api_key:
         raise ScoringToolError(
-            "GEMINI_API_KEY not set — cannot call the real scoring model. "
-            "Set it in .env, or use score_clause(..., call_model_fn=mock) "
+            "GEMINI_API_KEY is not set. "
+            "Set it in .env or enable SCORING_FORCE_MOCK=true "
             "for local testing."
         )
 
@@ -135,38 +181,72 @@ def _call_gemini(system_prompt: str, user_prompt: str) -> str:
             "Install it with: pip install google-genai"
         ) from exc
 
-    try:
-        client = genai.Client(api_key=api_key)
+    # Use the existing project retry configuration.
+    max_retries = max(0, THRESHOLDS.max_scoring_retries)
 
-        response = client.models.generate_content(
-            model=MODEL.scoring_model,
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                temperature=MODEL.temperature,
-                max_output_tokens=MODEL.max_tokens,
-                response_mime_type="application/json",
-            ),
-        )
+    for attempt in range(1, max_retries + 2):
+        try:
+            client = genai.Client(api_key=api_key)
 
-    except Exception as exc: 
-        raise ScoringToolError(
-            f"Gemini API call failed: {exc}"
-        ) from exc
+            response = client.models.generate_content(
+                model=MODEL.scoring_model,
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=MODEL.temperature,
+                    max_output_tokens=MODEL.max_tokens,
+                    response_mime_type="application/json",
+                ),
+            )
 
-    text = getattr(response, "text", None)
+            text = getattr(response, "text", None)
 
-    if not text or not text.strip():
-        raise ScoringToolError(
-            "Gemini API returned no text content"
-        )
+            if not text or not text.strip():
+                raise ScoringToolError(
+                    "Gemini API returned no text content."
+                )
 
-    return text.strip()
+            return text.strip()
+
+        except ScoringToolError:
+            raise
+
+        except Exception as exc:
+            retryable = _is_retryable_gemini_error(exc)
+
+            if not retryable:
+                raise ScoringToolError(
+                    f"Gemini API call failed: {exc}"
+                ) from exc
+
+            if attempt > max_retries:
+                raise ScoringToolError(
+                    f"Gemini API call failed after "
+                    f"{attempt} attempts: {exc}"
+                ) from exc
+
+            delay = min(2 ** (attempt - 1), 8)
+
+            logger.warning(
+                "Gemini temporary failure on attempt %d/%d. "
+                "Retrying in %ds: %s",
+                attempt,
+                max_retries + 1,
+                delay,
+                exc,
+            )
+
+            time.sleep(delay)
+
+    raise ScoringToolError(
+        "Gemini API call failed unexpectedly."
+    )
 
 
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
 # Mock scorer
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
+
 _SEVERE_PATTERN_HINTS = [
     "uncapped",
     "unlimited liability",
@@ -177,12 +257,17 @@ _SEVERE_PATTERN_HINTS = [
     "mutually agreed upon at the time of dispute",
 ]
 
+
 def _mock_call_model(
     system_prompt: str,
     user_prompt: str,
 ) -> str:
+    """Deterministic local scorer used only for tests/mock mode."""
 
-    found = "retrieved_rule_found = false" not in user_prompt.lower()
+    found = (
+        "retrieved_rule_found = false"
+        not in user_prompt.lower()
+    )
 
     clause_text_match = re.search(
         r'Clause text:\n"""\n(.*?)\n"""',
@@ -234,8 +319,8 @@ def _mock_call_model(
                 "so it defaults to Critical."
                 if has_severe_pattern
                 else
-                "No severe-exposure pattern detected, so it defaults to "
-                "Medium pending human review."
+                "No severe-exposure pattern detected, so it defaults "
+                "to Medium pending human review."
             )
         )
 
@@ -247,14 +332,28 @@ def _mock_call_model(
     )
 
 
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
 # Resolve model function
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
+
 def resolve_default_call_model_fn() -> CallModelFn:
-    force_mock = os.getenv(
-        "SCORING_FORCE_MOCK",
-        "",
-    ).strip().lower() in ("1", "true", "yes")
+    """
+    Resolve the scoring model.
+
+    Mock mode is enabled explicitly through SCORING_FORCE_MOCK=true.
+
+    Important:
+    A missing GEMINI_API_KEY does NOT silently switch to mock mode.
+    This prevents production runs from looking successful when Gemini
+    was never actually called.
+    """
+
+    force_mock = (
+        os.getenv("SCORING_FORCE_MOCK", "")
+        .strip()
+        .lower()
+        in ("1", "true", "yes")
+    )
 
     if force_mock:
         logger.info(
@@ -263,23 +362,16 @@ def resolve_default_call_model_fn() -> CallModelFn:
         )
         return _mock_call_model
 
-    if not os.getenv("GEMINI_API_KEY"):
-        logger.warning(
-            "score_risk: GEMINI_API_KEY not set — using mock scorer. "
-            "Results are NOT reliable risk assessments in this mode."
-        )
-        return _mock_call_model
-
     return _call_gemini
 
 
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
 # Response parsing + validation
-# --------------------------------------------------------------------------- #
-class ScoringValidationError(ValueError):
-    """Raised when the model response fails schema or guardrail validation.
+# ---------------------------------------------------------------------------
 
-    Caught internally by score_clause() to drive the retry loop.
+class ScoringValidationError(ValueError):
+    """
+    Raised when the model response fails schema or guardrail validation.
     """
 
 
@@ -305,6 +397,8 @@ def _find_unsupported_quotes(
     rationale: str,
     retrieved_rule: str,
 ) -> List[str]:
+    """Find quoted phrases in the rationale absent from the rule."""
+
     quotes = re.findall(
         r'"([^"]{4,})"',
         rationale,
@@ -321,7 +415,7 @@ def parse_and_validate_response(
     raw_text: str,
     clause: Clause,
 ) -> tuple[RiskScore, str]:
-    """Parse Gemini JSON response and apply scoring guardrails."""
+    """Parse Gemini JSON and apply scoring guardrails."""
 
     cleaned = _strip_code_fences(raw_text)
 
@@ -338,10 +432,12 @@ def parse_and_validate_response(
             "response JSON was not an object"
         )
 
-    extra_keys = set(data.keys()) - {
+    expected_keys = {
         "risk_score",
         "risk_rationale",
     }
+
+    extra_keys = set(data.keys()) - expected_keys
 
     if extra_keys:
         raise ScoringValidationError(
@@ -364,7 +460,7 @@ def parse_and_validate_response(
     except ValueError as exc:
         raise ScoringValidationError(
             f"risk_score {raw_score!r} is not one of "
-            f"{[s.value for s in RiskScore]}"
+            f"{[score.value for score in RiskScore]}"
         ) from exc
 
     rationale = data["risk_rationale"]
@@ -376,9 +472,10 @@ def parse_and_validate_response(
 
     rationale = rationale.strip()
 
-    # --------------------------------------------------------------------- #
+    # -----------------------------------------------------------------------
     # Guardrail: no playbook coverage
-    # --------------------------------------------------------------------- #
+    # -----------------------------------------------------------------------
+
     if not clause.retrieved_rule_found:
 
         if (
@@ -392,15 +489,16 @@ def parse_and_validate_response(
 
         if risk_score == RiskScore.LOW:
             raise ScoringValidationError(
-                "retrieved_rule_found is False — risk_score may not be Low "
-                "(docs/risk_rubric.md §2)"
+                "retrieved_rule_found is False — risk_score may not "
+                "be Low (docs/risk_rubric.md §2)"
             )
 
     else:
 
-        # ----------------------------------------------------------------- #
+        # -------------------------------------------------------------------
         # Guardrail: quoted claims must be traceable to retrieved rule
-        # ----------------------------------------------------------------- #
+        # -------------------------------------------------------------------
+
         unsupported = _find_unsupported_quotes(
             rationale,
             clause.retrieved_rule or "",
@@ -408,21 +506,39 @@ def parse_and_validate_response(
 
         if unsupported:
             raise ScoringValidationError(
-                "rationale contains quoted text not found in retrieved_rule: "
-                f"{unsupported}"
+                "rationale contains quoted text not found in "
+                f"retrieved_rule: {unsupported}"
             )
 
     return risk_score, rationale
 
 
-# --------------------------------------------------------------------------- #
-# Per-clause scoring with bounded retries + safe fallback
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
+# Per-clause scoring
+# ---------------------------------------------------------------------------
+
 def score_clause(
     clause: Clause,
     call_model_fn: Optional[CallModelFn] = None,
     max_retries: int = THRESHOLDS.max_scoring_retries,
 ) -> tuple[Clause, Optional[str]]:
+    """
+    Score one clause.
+
+    Returns:
+        (updated_clause, error)
+
+    Important:
+        Model/tool failure NEVER creates a fake Medium score.
+
+        If scoring fails:
+            risk_score = None
+            risk_rationale = None
+            flagged_for_review = True
+
+        This allows the rest of the pipeline and UI to distinguish
+        "not scored" from a real Medium assessment.
+    """
 
     fn = call_model_fn or resolve_default_call_model_fn()
 
@@ -431,11 +547,11 @@ def score_clause(
 
     last_error: Optional[str] = None
 
+    # Validation retries are separate from Gemini API retries.
     for attempt in range(
         1,
         max_retries + 2,
     ):
-
         try:
             raw = fn(
                 system_prompt,
@@ -443,7 +559,6 @@ def score_clause(
             )
 
         except ScoringToolError as exc:
-
             last_error = (
                 f"tool failure on attempt {attempt}: {exc}"
             )
@@ -454,7 +569,9 @@ def score_clause(
                 last_error,
             )
 
-            # API/network/auth failures aren't immediately retried.
+            # Tool/API failures are already handled by _call_gemini
+            # when they are temporary. Do not repeat the whole prompt
+            # here because that can unnecessarily increase quota usage.
             break
 
         try:
@@ -466,7 +583,8 @@ def score_clause(
             # High/Critical always require review.
             # No-playbook clauses always require human review.
             flagged = (
-                risk_score in (
+                risk_score
+                in (
                     RiskScore.HIGH,
                     RiskScore.CRITICAL,
                 )
@@ -484,7 +602,6 @@ def score_clause(
             return updated, None
 
         except ScoringValidationError as exc:
-
             last_error = (
                 f"validation failed on attempt {attempt}: {exc}"
             )
@@ -495,27 +612,32 @@ def score_clause(
                 last_error,
             )
 
-            # Give Gemini the exact validation failure so the next
-            # attempt can correct its response.
+            # Ask Gemini to correct the invalid response.
             user_prompt = (
                 build_user_prompt(clause)
-                + f"\n\nYour previous response was rejected: {exc}. "
-                "Correct this and respond again with only the JSON object."
+                + "\n\n"
+                "Your previous response was rejected because:\n"
+                f"{exc}\n\n"
+                "Correct the response and return ONLY the required "
+                "JSON object. Do not add Markdown, explanations, "
+                "or additional keys."
             )
 
-    # --------------------------------------------------------------------- #
-    # Safe fallback
-    # --------------------------------------------------------------------- #
-    fallback_rationale = (
-        "Automated scoring failed validation after repeated attempts "
-        f"({last_error}). Defaulting to Medium pending manual review "
-        "rather than accepting an unvalidated score."
+    # -----------------------------------------------------------------------
+    # Safe failure — NO FAKE RISK SCORE
+    # -----------------------------------------------------------------------
+
+    failure_rationale = (
+        "Automated scoring could not produce a validated risk assessment. "
+        "This clause requires manual review."
     )
 
     updated = clause.model_copy(
         update={
-            "risk_score": RiskScore.MEDIUM,
-            "risk_rationale": fallback_rationale,
+            # The critical change:
+            # Do NOT default to Medium.
+            "risk_score": None,
+            "risk_rationale": failure_rationale,
             "flagged_for_review": True,
         }
     )
@@ -523,21 +645,23 @@ def score_clause(
     return updated, last_error
 
 
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
 # LangGraph node
-# --------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------
 
 def score_risk(state: GraphState) -> GraphState:
     """LangGraph node — score every extracted clause."""
 
     if state.get("blocked", False):
-
         logger.info(
-            "score_risk: case_id=%s is blocked upstream, skipping scoring",
+            "score_risk: case_id=%s is blocked upstream, "
+            "skipping scoring",
             state.get("case_id"),
         )
 
-        return {}
+        return {
+            "risk_assessment_available": False,
+        }
 
     clauses: List[Clause] = (
         state.get("clauses", [])
@@ -545,14 +669,14 @@ def score_risk(state: GraphState) -> GraphState:
     )
 
     if not clauses:
-
         logger.info(
             "score_risk: case_id=%s has no clauses to score",
             state.get("case_id"),
         )
 
         return {
-            "clauses": []
+            "clauses": [],
+            "risk_assessment_available": False,
         }
 
     call_model_fn = resolve_default_call_model_fn()
@@ -581,20 +705,27 @@ def score_risk(state: GraphState) -> GraphState:
         if clause.is_scored()
     )
 
+    risk_assessment_available = (
+        len(updated_clauses) > 0
+        and scored_count == len(updated_clauses)
+    )
+
     logger.info(
         "score_risk: case_id=%s — %d/%d clauses scored "
-        "(%d fell back after errors)",
+        "(%d failed)",
         state.get("case_id"),
         scored_count,
-        len(clauses),
+        len(updated_clauses),
         len(new_tool_errors),
     )
 
     update = {
-        "clauses": updated_clauses
+        "clauses": updated_clauses,
+        "risk_assessment_available": risk_assessment_available,
     }
 
     if new_tool_errors:
         update["tool_errors"] = new_tool_errors
+        update["failed_steps"] = ["score_risk"]
 
     return validate_update(update)
