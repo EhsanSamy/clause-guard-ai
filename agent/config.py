@@ -7,11 +7,11 @@ from typing import Dict, List
 
 @dataclass(frozen=True)
 class ModelConfig:
-    classification_model: str = os.getenv("CLASSIFICATION_MODEL", "gemini-3.6-flash")
-    extraction_model: str = os.getenv("EXTRACTION_MODEL", "gemini-3.6-flash")
-    scoring_model: str = os.getenv("SCORING_MODEL", "gemini-3.6-flash")
-    reflection_model: str = os.getenv("REFLECTION_MODEL", "gemini-3.8-flash")
-    report_model: str = os.getenv("REPORT_MODEL", "gemini-3.8-flash")
+    classification_model: str = os.getenv("CLASSIFICATION_MODEL", "gemini-3-flash")
+    extraction_model: str = os.getenv("EXTRACTION_MODEL", "gemini-3-flash")
+    scoring_model: str = os.getenv("SCORING_MODEL", "gemini-3-flash")
+    reflection_model: str = os.getenv("REFLECTION_MODEL", "gemini-3-flash")
+    report_model: str = os.getenv("REPORT_MODEL", "gemini-3-flash")
     max_tokens: int = 4000
     temperature: float = 0.0
 

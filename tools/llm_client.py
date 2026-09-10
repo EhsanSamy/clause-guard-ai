@@ -25,7 +25,7 @@ from google.genai import types
 _client: Optional[genai.Client] = None
 
 # Used only as a fallback if agent.config.MODEL.* is still blank.
-FALLBACK_MODEL = "gemini-3.6-flash"
+FALLBACK_MODEL = "gemini-3-flash"
 
 
 def get_client() -> genai.Client:

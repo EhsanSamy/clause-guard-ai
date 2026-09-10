@@ -48,6 +48,9 @@ def _extract_pdf(raw_bytes: bytes) -> str:
             raise ValueError("PDF is encrypted/password-protected") from e
 
     text = "\n".join(page.extract_text() or "" for page in reader.pages)
+    text = "\n".join(page.extract_text() or "" for page in reader.pages)
+    print(f"[DEBUG] Extracted text length: {len(text)} chars")
+    print(f"[DEBUG] First 300 chars: {text[:300]!r}")
     if not text.strip():
         raise ValueError(
             "No extractable text found — looks like a scanned image PDF "
