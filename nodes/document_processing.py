@@ -116,5 +116,9 @@ def document_processing_node(state: GraphState) -> GraphState:
 
         return validate_update({"document_text": clean})
 
+    # document_processing_node
     except Exception as e:
-        return {"tool_errors": [f"document_processing: {e}"]}
+       return {
+        "tool_errors": [f"document_processing: {e}"],
+        "failed_steps": ["document_processing"],
+            }

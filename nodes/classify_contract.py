@@ -49,5 +49,9 @@ def classify_contract_node(state: GraphState) -> GraphState:
 
         return validate_update({"contract_type": contract_type})
 
+    # classify_contract_node
     except Exception as e:
-        return {"tool_errors": [f"classify_contract: {e}"]}
+        return {
+        "tool_errors": [f"classify_contract: {e}"],
+        "failed_steps": ["classify_contract"],
+        }

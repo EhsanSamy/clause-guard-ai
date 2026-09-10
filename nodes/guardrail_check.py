@@ -74,7 +74,7 @@ def guardrail_check_node(state: GraphState) -> GraphState:
     unsafe_request = findings["unsafe_request"]
 
     if not prompt_injection and not unsafe_request:
-        return {}
+        return {"guardrail_flags": []}
 
     flags: list[str] = []
     reasons: list[str] = []
