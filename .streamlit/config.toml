@@ -1,0 +1,28 @@
+[theme]
+base = "light"
+
+# Brand / interactive elements
+primaryColor = "#4F46E5"
+
+# Main application background
+backgroundColor = "#E8ECF3"
+
+# Cards, inputs, expanders, tables, etc.
+secondaryBackgroundColor = "#F8FAFC"
+
+# Main text
+textColor = "#172033"
+
+font = "sans serif"
+
+
+[server]
+headless = true
+
+
+[browser]
+gatherUsageStats = false
+
+
+[client]
+toolbarMode = "minimal"
