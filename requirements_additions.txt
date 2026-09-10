@@ -1,4 +1,0 @@
-# Add these to the repo's existing requirements.txt — everything else
-# (fastapi, uvicorn, python-multipart, pypdf, pydantic) is already listed.
-streamlit>=1.40,<2
-requests>=2.32,<3
