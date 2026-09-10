@@ -62,3 +62,9 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# --- results ---
+results/
+.agents/
+.claude/
+.tests/
